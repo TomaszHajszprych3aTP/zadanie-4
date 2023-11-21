@@ -1,23 +1,43 @@
 <?php
-$usernameToSave = "user123";
-$passwordToSave = "secret_password";
 
-$hashedPassword = password_hash($passwordToSave, PASSWORD_DEFAULT);
+// Dane do połączenia z bazą danych
+$servername = "localhost";
+$username = "username";
+$password = "password";
+$dbname = "database";
 
+// Dane do logowania
+$enteredUsername = "user123";
+$enteredPassword = "password123";
+
+// Połączenie z bazą danych
 $conn = new mysqli($servername, $username, $password, $dbname);
 
+// Sprawdzenie połączenia
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$sql = "INSERT INTO users (username, password) VALUES ('$usernameToSave', '$hashedPassword')";
+// Zapytanie do pobrania zaszyfrowanego hasła z bazy danych
+$sql = "SELECT password FROM users WHERE username='$enteredUsername'";
+$result = $conn->query($sql);
 
-if ($conn->query($sql) === TRUE) {
-    echo "Dane zostały zapisane poprawnie.";
+if ($result->num_rows > 0) {
+    // Użytkownik istnieje, sprawdź hasło
+    $row = $result->fetch_assoc();
+    $hashedPasswordFromDatabase = $row['password'];
+
+    // Sprawdzenie hasła za pomocą password_verify
+    if (password_verify($enteredPassword, $hashedPasswordFromDatabase)) {
+        echo "Logowanie udane!";
+    } else {
+        echo "Błędne hasło.";
+    }
 } else {
-    echo "Błąd podczas zapisywania danych: " . $conn->error;
+    echo "Użytkownik nie istnieje.";
 }
 
+// Zamknięcie połączenia z bazą danych
 $conn->close();
 
 ?>
